@@ -1,0 +1,11 @@
+<Project>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-bionic-arm64' or '$(RuntimeIdentifier)' == 'android-arm64' or '$(RuntimeIdentifier)' == 'android-x64'">
+    <DotNativeNativeSource Include="$(MSBuildThisFileDirectory)../Platform/Android/*.kt" />
+    <DotNativePluginEntry Include="PdfViewPlugin" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'ios-arm64' or '$(RuntimeIdentifier)' == 'iossimulator-arm64'">
+    <DotNativeNativeSource Include="$(MSBuildThisFileDirectory)../Platform/iOS/*.swift" />
+    <DotNativeNativeFramework Include="PDFKit" />
+    <DotNativePluginEntry Include="PdfViewPlugin" />
+  </ItemGroup>
+</Project>

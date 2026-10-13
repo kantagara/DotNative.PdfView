@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks
+      Condition="'$(NETCoreSdkVersion)' != '' and $([MSBuild]::VersionLessThan('$(NETCoreSdkVersion)', '10.0.100'))"
+      >net9.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <Version>0.1.0-preview.1</Version>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <DotNativePluginEntry>PdfViewPlugin</DotNativePluginEntry>
+    <DotNativeSourceRoot Condition="'$(DotNativeSourceRoot)' == ''"
+      >../dotNative</DotNativeSourceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference
+      Include="$(DotNativeSourceRoot)/src/DotNative/DotNative.csproj"
+      Condition="Exists('$(DotNativeSourceRoot)/src/DotNative/DotNative.csproj')"
+    />
+    <PackageReference
+      Include="DotNative"
+      Version="0.1.0-preview.10"
+      Condition="!Exists('$(DotNativeSourceRoot)/src/DotNative/DotNative.csproj')"
+    />
+    <Compile Remove="tests/**/*.cs" />
+    <None Remove="Platform/**/*;buildTransitive/**/*" />
+    <None Include="Platform/**/*;buildTransitive/**/*" Pack="true" PackagePath="%(Identity)" />
+    <None Remove="README.md;ORIGIN.md;LICENSE" />
+    <None Include="README.md;ORIGIN.md;LICENSE" Pack="true" PackagePath="%(Identity)" />
+  </ItemGroup>
+  <Import Project="build/PluginAuthoring.props" />
+  <Import Project="build/PluginAuthoring.targets" />
+</Project>

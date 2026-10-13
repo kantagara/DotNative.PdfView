@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <application android:theme="@android:style/Theme.Material.Light.NoActionBar">
+    <uses-library android:name="android.test.runner" />
+    <activity android:name=".HarnessActivity" android:exported="true" />
+  </application>
+</manifest>
