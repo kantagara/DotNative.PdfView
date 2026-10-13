@@ -60,7 +60,18 @@ public sealed class PdfViewer(IPlatformChannels channels, PresentationTarget tar
             throw new InvalidOperationException("A PDF viewer is already open.");
         try
         {
-            var path = await cache.GetAsync(source, options, progress, cancellationToken);
+            var nativeDirectory = await channels
+                .Get("dotnative.pdf-view")
+                .InvokeAsync("cacheDirectory", null, cancellationToken);
+            if (nativeDirectory is not string directory || !Path.IsPathFullyQualified(directory))
+                throw new InvalidDataException("Native PDF cache directory is unavailable.");
+            var path = await cache.GetAsync(
+                source,
+                options,
+                progress,
+                cancellationToken,
+                directory
+            );
             cancellationToken.ThrowIfCancellationRequested();
             try
             {

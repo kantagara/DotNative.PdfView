@@ -6,6 +6,13 @@ import UIKit
     private var viewer: PdfController?
     static func register() { if instance == nil { instance = PdfViewPlugin() } }
     private init() {
+        NativeChannels.channel("dotnative.pdf-view").handle("cacheDirectory") { _, reply in
+            reply.success(
+                .string(
+                    URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(
+                        "dotnative-pdf-v1"
+                    ).path))
+        }
         NativeChannels.channel("dotnative.pdf-view").handle("present") { [weak self] args, reply in
             guard let self else {
                 reply.failure("unavailable", "PDF plugin unavailable")

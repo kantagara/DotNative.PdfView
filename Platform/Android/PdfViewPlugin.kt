@@ -23,6 +23,9 @@ class PdfViewPlugin(private val activity: Activity) {
     private var session: Session? = null
 
     init {
+        NativeChannels.channel("dotnative.pdf-view").handle("cacheDirectory") { _, reply ->
+            reply.success(File(activity.cacheDir, "dotnative-pdf-v1").absolutePath)
+        }
         NativeChannels.channel("dotnative.pdf-view").handle("present") { args, reply ->
             val fields = args as? Map<*, *>
             val path = fields?.get("path") as? String

@@ -21,6 +21,8 @@ The application owns loading/error/retry UI, title, document URL and screen/acco
 - Android renders one bounded bitmap per requested page and closes page/renderer/file resources on exit. iOS removes observers and releases PDFDocument on exit. Backgrounding closes the viewer.
 - PDF links are inert: Android renders pixels, iOS strips link annotations from the in-memory document. Password entry, search, form editing and annotation editing are not part of this preview.
 
+The native host supplies the app-private cache directory before downloading, so Android does not depend on a desktop-style managed temporary path. `PdfViewOptions.Labels` localizes native Close/Previous/Next labels.
+
 ## Native setup
 
 Use the published release source tag in a DotNative dependency manifest. For source ProjectReference consumers, import `buildTransitive/DotNative.PdfView.targets`; NuGet consumers import it automatically. The target registers `PdfViewPlugin`, its Kotlin/Swift sources and the iOS `PDFKit` framework.

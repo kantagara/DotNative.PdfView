@@ -69,20 +69,24 @@ try
     await cache.GetAsync(new("https://documents.example.com/2.pdf"), options, null, default);
     await cache.GetAsync(new("https://documents.example.com/3.pdf"), options, null, default);
     Check(Directory.GetFiles(root, "*.pdf").Length <= 2, "cache bound ignored");
-    var transport = new Transport();
+    var transport = new Transport { Directory = Path.Combine(root, "native-cache") };
     using var channels = new PlatformChannels(new Dispatcher(), transport);
     transport.Channels = channels;
     var viewer = new PdfViewer(channels, new(NativePlatform.Android), cache);
     using var presentCancel = new CancellationTokenSource();
     var present = viewer.PresentAsync(source, options, cancellationToken: presentCancel.Token);
     await Wait(() => transport.Requests == 1);
+    Check(
+        Path.GetDirectoryName(transport.PresentedPath) == transport.Directory,
+        "native cache directory ignored"
+    );
     await Throws<InvalidOperationException>(() => viewer.PresentAsync(source, options));
     presentCancel.Cancel();
     await Throws<OperationCanceledException>(() => present);
     Check(transport.Cancels == 1, "native cancellation missing");
     transport.Fail = true;
     await Throws<PluginException>(() => viewer.PresentAsync(source, options));
-    Check(!File.Exists(path), "native corrupt PDF retained in cache");
+    Check(!File.Exists(transport.PresentedPath), "native corrupt PDF retained in cache");
     await Throws<PlatformNotSupportedException>(() =>
         new PdfViewer(channels, new(NativePlatform.Linux), cache).PresentAsync(source, options)
     );
@@ -175,6 +179,8 @@ sealed class Transport : IPluginTransport
     public int Requests;
     public int Cancels;
     public bool Fail;
+    public string Directory = "";
+    public string PresentedPath = "";
 
     public void SendPlugin(ReadOnlySpan<byte> bytes)
     {
@@ -183,6 +189,17 @@ sealed class Transport : IPluginTransport
             Cancels++;
             return;
         }
+        var call = (Dictionary<string, object?>)PluginCodec.Decode(bytes[16..])!;
+        if ((string)call["method"]! == "cacheDirectory")
+        {
+            var directoryPayload = PluginCodec.Encode(Directory);
+            var packet = new byte[12 + directoryPayload.Length];
+            bytes[..8].CopyTo(packet);
+            directoryPayload.CopyTo(packet, 12);
+            Channels.AcceptReply(packet);
+            return;
+        }
+        PresentedPath = (string)((Dictionary<string, object?>)call["arguments"]!)["path"]!;
         Requests++;
         if (!Fail)
             return;

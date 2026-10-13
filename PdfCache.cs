@@ -70,17 +70,21 @@ public sealed class PdfCache : IDisposable
         Uri source,
         PdfViewOptions options,
         IProgress<PdfDownloadProgress>? progress,
-        CancellationToken token
+        CancellationToken token,
+        string? nativeDirectory = null
     )
     {
         Validate(source, options);
+        var activeDirectory = nativeDirectory is null
+            ? directory
+            : Path.GetFullPath(nativeDirectory);
         await serial.WaitAsync(token);
         string? temporary = null;
         try
         {
-            Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(activeDirectory);
             var path = Path.Combine(
-                directory,
+                activeDirectory,
                 Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source.AbsoluteUri)))
                     + ".pdf"
             );
@@ -161,7 +165,7 @@ public sealed class PdfCache : IDisposable
                 temporary = null;
                 File.SetLastWriteTimeUtc(path, clock.GetUtcNow().UtcDateTime);
                 foreach (
-                    var old in new DirectoryInfo(directory)
+                    var old in new DirectoryInfo(activeDirectory)
                         .GetFiles("*.pdf")
                         .Where(f => f.FullName != path)
                         .OrderByDescending(f => f.LastWriteTimeUtc)
